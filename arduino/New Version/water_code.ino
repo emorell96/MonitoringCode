@@ -1,7 +1,8 @@
+#include <array>
 #include <avr/wdt.h> //Watchdog timer (WDT) library
 #include <Wire.h> //Wire library needed for ADC communication
 #include <Adafruit_ADS1015.h> //Adafruit ADC communication library
-#include <array>
+
 
 //ARDUINO_LI_v4
 //Based on code by K. Fujiwara, Updated by E. Morell.
@@ -29,7 +30,28 @@ class Multiplexer{
             for(auto&& pin: _pins){
                 pins[count].first = pin;
                 pins[count].second = default_state;
+                ++count;
             }
+        }
+        int choose_channel(int channel){
+            switch (N) //Different truth table depending on how many bits the multiplexer has. Default is not implemented so error.
+            {
+            case /* constant-expression */:
+                /* code */
+                break;
+            
+            default:
+                break;
+            }
+        }
+    
+    private:
+        void set_pin(int n, int status){
+            if(n>=N){
+                Serial.println("Error! Pin is beyond the multiplexer pin number");
+                exit(EXIT_FAILURE);
+            }
+            pins[n].second = status;
         }
 
 }
