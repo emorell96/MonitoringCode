@@ -1,0 +1,17 @@
+cl_list={'r','b','g','c','k','m'};
+mk_list={'o','+'};
+LI_COM='COM14';
+numPoints=30;
+updatePeriod=1;
+timeLimits=[0 35];
+tempLimits=[15 40];
+
+temp_hp=45;
+temp_lp=15;
+flow_lp = 2.5;
+flowLimits = [0 5];
+
+
+li_lg_str={'Ch0 Total Flow Return','Ch1 ZS D','Ch3 TOP MOT Inner','Ch4 TOT IN','Ch 5 BOT MOT Outer','Ch6 ZS A','Ch7 TOP MOT Outer','Ch8 ZS B'};
+li_ch=[0,1,3,4,5,6,7,8];
+li_flow_str={'TOP MOT 3,4 OUT','BOT MOT 3,4 OUT','BOT MOT 1,2 OUT','TOT OUT','ZS B 1,2 OUT','TOT IN','ZS A 1,2 + ZS D OUT','TOP MOT 1,2 OUT'};

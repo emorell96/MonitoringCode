@@ -35,6 +35,8 @@ class SerialData:
     def __open(self):
         self.ser = serial.Serial(self.port, self.baud_rate, parity=self.parity, timeout = self.timeout)
         self.__waitForArduino()
+    def __close(self):
+        self.ser.close()
     def __waitForArduino(self):
 
         # wait until the Arduino sends 'Arduino Ready' - allows time for Arduino reset
@@ -83,6 +85,7 @@ class SerialData:
                 except:
                     print("data is not an ASCII int")
             data.append(x)
+        self.__close()
         return data
     def __int_to_temp(self, temp):
         return 2.5586*(temp*0.1875/2.5-100)
