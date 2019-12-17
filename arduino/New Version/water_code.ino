@@ -26,15 +26,22 @@ class Multiplexer{
     //Class to interface with a Multiplexer of N bits
     public:
         std::array<std::pair<int, int>, N> pins; //array with pairs (pin, status: HIGH, LOW)
+        //Constructors:
+        Multiplexer() = default;
         Multiplexer(std::array<int, N> _pins, int default_state = LOW){
+            this.set_pins(_pins, default_state);
+        }
+        //Methods:
+        int set_pins(std::array<int, N> _pins, int default_state = LOW){
             int count = 0;
             for(auto&& pin: _pins){
                 pins[count].first = pin;
                 pins[count].second = default_state;
                 ++count;
             }
+            return 1;
         }
-        Multiplexer() = default;
+        
         int choose_channel(int channel){
             int success = 0;
             switch (N) //Different truth table depending on how many bits the multiplexer has. Default is not implemented so error.
@@ -175,7 +182,12 @@ class TempSensorAdafruit : Sensor {
         TempSensorAdafruit(int chan){
             this.channel = chan;
         }
+        static int set_multiplexer_pins(int S0, int S1, int S2, int S3){
+            TempSensorAdafruit.multiplexer.
+        }
+        int read(){
 
+        }
     private:
         static Multiplexer<4> multiplexer; //Object used to control multiplexer
         static Adafruit_ADS1115 ads; //Object used to control adc
@@ -183,5 +195,5 @@ class TempSensorAdafruit : Sensor {
             ads.begin();
             ads.setGain(GAIN_TWOTHIRDS);
         }
-        void read()
+        
 }
