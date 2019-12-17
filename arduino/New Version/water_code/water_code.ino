@@ -43,7 +43,7 @@ class Multiplexer{
             return 1;
         }
         
-        int choose_channel(int channel){
+        int set_channel(int channel){
             int success = 0;
             switch (N) //Different truth table depending on how many bits the multiplexer has. Default is not implemented so error.
             {
@@ -151,10 +151,10 @@ class Multiplexer{
                     Serial.println("Channel is wrong! Channel needs to be between 0 and 15.");
                     break;
                 }
-                this.set_pin(0, A);
-                this.set_pin(1, B);
-                this.set_pin(2, C);
-                this.set_pin(3, D);
+                this->set_pin(0, A);
+                this->set_pin(1, B);
+                this->set_pin(2, C);
+                this->set_pin(3, D);
                 success = 1;
                 break;
             
@@ -187,7 +187,8 @@ class TempSensorAdafruit : Sensor {
             TempSensorAdafruit::multiplexer.set_pins((std::array<int, 4>){{S0, S1, S2, S3}});
         }
         int read(){
-            return 1;
+            multiplexer.set_channel(channel);
+            return ads.readADC_Differential_2_3();
         }
     private:
         static Multiplexer<4> multiplexer; //Object used to control multiplexer
@@ -201,6 +202,7 @@ class TempSensorAdafruit : Sensor {
 };
 
 void setup(){
+    
 
 };
 
