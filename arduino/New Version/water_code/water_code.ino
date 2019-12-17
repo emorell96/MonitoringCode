@@ -14,8 +14,10 @@ class Sensor{
     //The aim of this class is to standarize the way we talk to sensors using the arduino.
     //It will have a 
     public:
+        bool debug = false;
         virtual int read() =0;
         virtual int set_pin(int i) = 0;
+        void set_debug(bool deb){debug = deb;}
     protected:
         virtual int open() = 0;
         
@@ -190,6 +192,9 @@ class TempSensorAdafruit : public Sensor {
             multiplexer.set_pins((std::array<int, 4>){S0, S1, S2, S3});
         }
         int read(){
+            if(debug){
+                return random(15000,17000);
+            }
             multiplexer.set_channel(channel);
             return ads.readADC_Differential_2_3();
         }
@@ -221,6 +226,9 @@ class FlowSensor : public Sensor{
             open();
         }
         int read(){
+            if(debug){
+                return random(1, 1023);
+            }
             return analogRead(pin);
         }
     protected:
