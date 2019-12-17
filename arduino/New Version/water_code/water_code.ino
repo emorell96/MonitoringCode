@@ -15,7 +15,8 @@ class Sensor{
     //It will have a 
     public:
         virtual int read() =0;
-    private:
+        virtual int set_pin() = 0;
+    protected:
         virtual int open() = 0;
         
        
@@ -190,18 +191,16 @@ class TempSensorAdafruit : Sensor {
         }
         int read(){
             multiplexer.set_channel(channel);
-            return 2;
+            return ads.readADC_Differential_2_3();
         }
-        int set_channel(int chan){
+        int set_pin(int chan){
             channel = chan;
             this->open();
+            return 1;
         }
     protected:
         Adafruit_ADS1115 ads; //Object used to control adc
         Multiplexer<4> multiplexer; //Object used to control multiplexer
-    private:
-        
-       
         int open(){
             ads.begin();
             ads.setGain(GAIN_TWOTHIRDS);
@@ -209,21 +208,116 @@ class TempSensorAdafruit : Sensor {
         };
         
 };
-std::array<TempSensorAdafruit, 16> temp_sensors;
-void setup(){
-//TempSensorAdafruit(1);
+class FlowSensor : Sensor{
+    int pin;
+    public:
+        FlowSensor() = default;
+        FlowSensor(int _pin){
+            pin = _pin;
+            open();
+        }
+        int set_pin(int _pin){
+            pin = _pin;
+            open();
+        }
+        int read(){
+            return analogRead(pin);
+        }
+    protected:
+        int open(){
+            pinMode(pin, INPUT);
+            return 1;
+        }
+    
+};
+//  class Sensors //<std::array<SensorType, N>, ...>
+// {
+// private:
+//     /* data */
+// public:
+//     Sensors(std::tuple structure)
+//     void initialize(){
+//         //iterate through
+//     }
+// };
 //Temperature Sensor array:
-//TempSensorAdafruit::set_multiplexer_pins(47, 49, 51, 53);
+std::array<TempSensorAdafruit, 16> temp_sensors;
+//FlowSensor array:
+std::array<FlowSensor, 8> flow_sensors;
+//Sensors(std::make_tuple(std::make_tuple(TempSensorAdafruit, 16, ), std::make_tuple(FlowSensor, 8)) 
 
-int i =0;
-for(auto&& tempsensor:temp_sensors){
-    tempsensor.set_channel(i);
-    tempsensor.set_multiplexer_pins(47, 49, 51, 53);
-    ++i;
+
+class SerialSensorInterface{
+    
+    public:
+        char sol, eol, pollchar;
+        bool recipient_ready = false;
+        int baudrate;
+        SerialSensorInterface(char _sol, char _eol, char _pollchar ,String _ready_msg = "Arduino is ready", int _baudrate = 9600){
+            begin(_sol, _eol, _pollchar,_ready_msg, _baudrate);
+        }
+        SerialSensorInterface = default;
+        void begin(char _sol, char _eol, char _pollchar, String _ready_msg = "Arduino is ready", int _baudrate = 9600){
+            sol = _sol;
+            eol = _eol;
+            pollchar = _pollchar;
+            baudrate = _baudrate;
+            Serial.begin(_baudrate);
+            Serial.flush(); 
+            send_msg(_ready_msg);
+        }
+        void polled(){
+            //put inside loop()
+            if(Serial.available()){
+                char inChar = (char)Serial.read(); 
+                if(inChar == pollchar){
+                    //received the polling char:
+                    //So send data
+                    recipient_ready = true;
+                }
+            }
+        }
+        String format_msg(String msg){
+            return sol+msg+eol;
+        }
+        void send_msg(String msg){
+            Serial.print(format_msg(msg));
+        }
+        template<size_t n>
+        void ReadValues(std::array<Sensor, n> &arr){
+            //It will only read values when asked by recipient.
+            if(recipient_ready){
+                for(auto&& x: arr){
+                    send_msg(String(x.read()));
+                }
+            }
+        }
 }
 
+
+
+//Temperature Sensor array:
+std::array<TempSensorAdafruit, 16> temp_sensors;
+//FlowSensor array:
+std::array<FlowSensor, 8> flow_sensors;
+SerialSensorInterface ser;
+
+void setup(){
+    ser.begin('\r', '\n', '\n');
+    int i =0;
+    for(auto&& tempsensor:temp_sensors){
+        tempsensor.set_channel(i);
+        tempsensor.set_multiplexer_pins(47, 49, 51, 53);
+        ++i;
+    }
+    i =0;
+    for(auto&& flowsensor:flow_sensors){
+        flowsensor.set_pin(i);
+        ++i;
+    }
 };
-
 void loop(){
-
+    ser.polled();
+    ser.ReadValues<temp_sensors.size()>(temp_sensors);
+    ser.ReadValues<flow_sensors.size()>(flow_sensors);
 };
