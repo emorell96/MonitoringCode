@@ -15,7 +15,7 @@ class Sensor{
     //It will have a 
     public:
         virtual int read() =0;
-        virtual int set_pin() = 0;
+        virtual int set_pin(int i) = 0;
     protected:
         virtual int open() = 0;
         
@@ -178,7 +178,7 @@ class Multiplexer{
 
 
 };
-class TempSensorAdafruit : Sensor {
+class TempSensorAdafruit : public Sensor {
     int channel;
     public:
         TempSensorAdafruit() = default;
@@ -208,7 +208,7 @@ class TempSensorAdafruit : Sensor {
         };
         
 };
-class FlowSensor : Sensor{
+class FlowSensor : public Sensor{
     int pin;
     public:
         FlowSensor() = default;
@@ -241,9 +241,9 @@ class FlowSensor : Sensor{
 //     }
 // };
 //Temperature Sensor array:
-std::array<TempSensorAdafruit, 16> temp_sensors;
+//std::array<TempSensorAdafruit, 16> temp_sensors;
 //FlowSensor array:
-std::array<FlowSensor, 8> flow_sensors;
+//std::array<FlowSensor, 8> flow_sensors;
 //Sensors(std::make_tuple(std::make_tuple(TempSensorAdafruit, 16, ), std::make_tuple(FlowSensor, 8)) 
 
 
@@ -256,7 +256,7 @@ class SerialSensorInterface{
         SerialSensorInterface(char _sol, char _eol, char _pollchar ,String _ready_msg = "Arduino is ready", int _baudrate = 9600){
             begin(_sol, _eol, _pollchar,_ready_msg, _baudrate);
         }
-        SerialSensorInterface = default;
+        SerialSensorInterface() = default;
         void begin(char _sol, char _eol, char _pollchar, String _ready_msg = "Arduino is ready", int _baudrate = 9600){
             sol = _sol;
             eol = _eol;
@@ -283,16 +283,16 @@ class SerialSensorInterface{
         void send_msg(String msg){
             Serial.print(format_msg(msg));
         }
-        template<size_t n>
-        void ReadValues(std::array<Sensor, n> &arr){
+        //template<size_t n>
+        void ReadValues(Sensor* arr, size_t n){
             //It will only read values when asked by recipient.
             if(recipient_ready){
-                for(auto&& x: arr){
-                    send_msg(String(x.read()));
+                for(auto i = arr; arr+n; ++i){
+                    send_msg(String((i)->read()));
                 }
             }
         }
-}
+};
 
 
 
@@ -306,7 +306,7 @@ void setup(){
     ser.begin('\r', '\n', '\n');
     int i =0;
     for(auto&& tempsensor:temp_sensors){
-        tempsensor.set_channel(i);
+        tempsensor.set_pin(i);
         tempsensor.set_multiplexer_pins(47, 49, 51, 53);
         ++i;
     }
@@ -318,6 +318,6 @@ void setup(){
 };
 void loop(){
     ser.polled();
-    ser.ReadValues<temp_sensors.size()>(temp_sensors);
-    ser.ReadValues<flow_sensors.size()>(flow_sensors);
+    ser.ReadValues(temp_sensors.data(), temp_sensors.size()); //temp_sensors.size()
+    ser.ReadValues(flow_sensors.data(), flow_sensors.size());
 };
