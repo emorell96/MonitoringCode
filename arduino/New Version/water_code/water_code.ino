@@ -14,7 +14,6 @@ class Sensor{
     //The aim of this class is to standarize the way we talk to sensors using the arduino.
     //It will have a 
     public:
-        virtual int get_value() = 0;
         virtual int read() =0;
     private:
         virtual int open() = 0;
@@ -38,6 +37,7 @@ class Multiplexer{
             for(auto&& pin: _pins){
                 pins[count].first = pin;
                 pins[count].second = default_state;
+                pinMode(pin, OUTPUT);//initialize the digital out pins as outputs
                 ++count;
             }
             return 1;
@@ -180,19 +180,28 @@ class Multiplexer{
 class TempSensorAdafruit : Sensor {
     int channel;
     public:
+        TempSensorAdafruit() = default;
         TempSensorAdafruit(int chan){
             channel = chan;
+            open();
         }
-        static int set_multiplexer_pins(int S0, int S1, int S2, int S3){
-            TempSensorAdafruit::multiplexer.set_pins((std::array<int, 4>){{S0, S1, S2, S3}});
+        int set_multiplexer_pins(int S0, int S1, int S2, int S3){
+            multiplexer.set_pins((std::array<int, 4>){S0, S1, S2, S3});
         }
         int read(){
             multiplexer.set_channel(channel);
-            return ads.readADC_Differential_2_3();
+            return 2;
         }
+        int set_channel(int chan){
+            channel = chan;
+            this->open();
+        }
+    protected:
+        Adafruit_ADS1115 ads; //Object used to control adc
+        Multiplexer<4> multiplexer; //Object used to control multiplexer
     private:
-        static Multiplexer<4> multiplexer; //Object used to control multiplexer
-        static Adafruit_ADS1115 ads; //Object used to control adc
+        
+       
         int open(){
             ads.begin();
             ads.setGain(GAIN_TWOTHIRDS);
@@ -202,7 +211,16 @@ class TempSensorAdafruit : Sensor {
 };
 
 void setup(){
-    
+TempSensorAdafruit(1);
+//Temperature Sensor array:
+//TempSensorAdafruit::set_multiplexer_pins(47, 49, 51, 53);
+std::array<TempSensorAdafruit, 16> temp_sensors;
+int i =0;
+for(auto&& tempsensor:temp_sensors){
+    tempsensor.set_channel(i);
+    tempsensor.set_multiplexer_pins(47, 49, 51, 53);
+    ++i;
+}
 
 };
 
