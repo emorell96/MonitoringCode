@@ -209,12 +209,12 @@ class TempSensorAdafruit : Sensor {
         };
         
 };
-
+std::array<TempSensorAdafruit, 16> temp_sensors;
 void setup(){
-TempSensorAdafruit(1);
+//TempSensorAdafruit(1);
 //Temperature Sensor array:
 //TempSensorAdafruit::set_multiplexer_pins(47, 49, 51, 53);
-std::array<TempSensorAdafruit, 16> temp_sensors;
+
 int i =0;
 for(auto&& tempsensor:temp_sensors){
     tempsensor.set_channel(i);
