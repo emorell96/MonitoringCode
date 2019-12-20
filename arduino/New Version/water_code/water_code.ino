@@ -186,6 +186,8 @@ class TempSensorAdafruit : public Sensor {
         }
         int read(){
             if(debug){
+                Serial.flush();
+                Serial.println(F("Debug Mode is ON!"));
                 return random(15000,17000);
             }
             multiplexer.set_channel(channel);
@@ -255,20 +257,22 @@ class FlowSensor : public Sensor{
 class SerialSensorInterface{
     
     public:
-        char sol, eol, pollchar;
+        char sol, eol, pollchar, debug_char;
         bool recipient_ready = false;
         int baudrate;
-        SerialSensorInterface(char _sol, char _eol, char _pollchar ,String _ready_msg, int _baudrate = 9600){
-            begin(_sol, _eol, _pollchar,_ready_msg, _baudrate);
+        SerialSensorInterface(char _sol, char _eol, char _pollchar, char _debug_char, String _ready_msg, int _baudrate = 9600){
+            begin(_sol, _eol, _pollchar, _debug_char, _ready_msg, _baudrate);
         }
         SerialSensorInterface() = default;
-        void begin(char _sol, char _eol, char _pollchar, String _ready_msg, int _baudrate = 9600){
+        void begin(char _sol, char _eol, char _pollchar, char _debug_char, String _ready_msg, int _baudrate = 9600){
             sol = _sol;
             eol = _eol;
             pollchar = _pollchar;
             baudrate = _baudrate;
+            debug_char = _debug_char;
             Serial.begin(_baudrate);
-            Serial.flush(); 
+            Serial.flush();
+             
             send_msg(_ready_msg);
         }
         void polled(){
@@ -288,13 +292,16 @@ class SerialSensorInterface{
         void send_msg(String msg){
             Serial.print(format_msg(msg));
         }
-        //template<size_t n>
-        void ReadValues(Sensor* arr, size_t n){
+        template<typename T, size_t n>
+        void ReadValues(std::array<T, n> &arr){
             //It will only read values when asked by recipient.
             if(recipient_ready){
-                for(auto i = arr; arr+n; ++i){
-                    send_msg(String((i)->read()));
-                }
+                  for(auto &&x: arr){
+                    send_msg(String(x.read()));
+                  }
+//                for(auto i = arr; arr+n; ++i){
+//                    send_msg(String((i)->read()));
+//                }
             }
         }
 };
@@ -302,13 +309,14 @@ class SerialSensorInterface{
 
 
 //Temperature Sensor array:
-std::array<TempSensorAdafruit, 16> temp_sensors;
+std::array<TempSensorAdafruit, 1> temp_sensors;
 //FlowSensor array:
-std::array<FlowSensor, 8> flow_sensors;
+std::array<FlowSensor, 1> flow_sensors;
 SerialSensorInterface ser;
 
 void setup(){
-    ser.begin('\r','\n', '\n', F("Arduino is ready"));
+    //Serial.println("s");
+    ser.begin('\r','\n', 'a', '*',F("Arduino is ready"));
     int i =0;
     for(auto&& tempsensor:temp_sensors){
         tempsensor.set_debug(true);
@@ -324,6 +332,7 @@ void setup(){
 };
 void loop(){
     ser.polled();
-    ser.ReadValues(temp_sensors.data(), temp_sensors.size()); //temp_sensors.size()
-    ser.ReadValues(flow_sensors.data(), flow_sensors.size());
+    ser.ReadValues<TempSensorAdafruit, 1>(temp_sensors);//.data()//, temp_sensors.size()); //temp_sensors.size()
+    ser.ReadValues<FlowSensor, 1>(flow_sensors);//.data(), flow_sensors.size());
+    ser.recipient_ready = false;
 };
