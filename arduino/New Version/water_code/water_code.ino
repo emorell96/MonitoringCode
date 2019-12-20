@@ -24,18 +24,17 @@ class Sensor{
        
 };
 
-template<int N>
 class Multiplexer{
-    //Class to interface with a Multiplexer of N bits
+    //Class to interface with a Multiplexer of 4 bits
     public:
-        std::array<std::pair<int, int>, N> pins; //array with pairs (pin, status: HIGH, LOW)
+        std::array<std::pair<int, int>, 4> pins; //array with pairs (pin, status: HIGH, LOW)
         //Constructors:
         Multiplexer() = default;
-        Multiplexer(std::array<int, N> _pins, int default_state = LOW){
-            this.set_pins(_pins, default_state);
+        Multiplexer(std::array<int, 4> _pins, int default_state = LOW){
+            this->set_pins(_pins, default_state);
         }
         //Methods:
-        int set_pins(std::array<int, N> _pins, int default_state = LOW){
+        int set_pins(std::array<int, 4> _pins, int default_state = LOW){
             int count = 0;
             for(auto&& pin: _pins){
                 pins[count].first = pin;
@@ -48,11 +47,8 @@ class Multiplexer{
         
         int set_channel(int channel){
             int success = 0;
-            switch (N) //Different truth table depending on how many bits the multiplexer has. Default is not implemented so error.
-            {
-            case 4:
-                int A = LOW, B = LOW, C = LOW, D = LOW;
-                switch (channel)
+            int A = LOW, B = LOW, C = LOW, D = LOW;
+            switch (channel)
                 {
                 case 0:
                     A=LOW;
@@ -151,27 +147,24 @@ class Multiplexer{
                     D=HIGH;
                     break;
                 default:
-                    Serial.println("Channel is wrong! Channel needs to be between 0 and 15.");
+                    Serial.println(F("Channel is wrong! Channel needs to be between 0 and 15."));
                     break;
-                }
-                this->set_pin(0, A);
-                this->set_pin(1, B);
-                this->set_pin(2, C);
-                this->set_pin(3, D);
-                success = 1;
-                break;
-            
-            default:
-                return success;
-                break;
             }
-        }
+            this->set_pin(0, A);
+            this->set_pin(1, B);
+            this->set_pin(2, C);
+            this->set_pin(3, D);
+            success = 1;
+            return success;
+
+            }
+        
         
     
-    private:
+    
         void set_pin(int n, int status){
-            if(n>=N){
-                Serial.println("Error! Pin is beyond the multiplexer pin number");
+            if(n>=4){
+                Serial.println(F("Error! Pin is beyond the multiplexer pin number"));
                 exit(EXIT_FAILURE);
             }
             pins[n].second = status;
@@ -196,7 +189,7 @@ class TempSensorAdafruit : public Sensor {
                 return random(15000,17000);
             }
             multiplexer.set_channel(channel);
-            return ads.readADC_Differential_2_3();
+            return ads_.readADC_Differential_2_3();
         }
         int set_pin(int chan){
             channel = chan;
@@ -204,15 +197,19 @@ class TempSensorAdafruit : public Sensor {
             return 1;
         }
     protected:
-        Adafruit_ADS1115 ads; //Object used to control adc
-        Multiplexer<4> multiplexer; //Object used to control multiplexer
+        static Adafruit_ADS1115 ads_; //Object used to control adc
+        static Multiplexer multiplexer; //Object used to control multiplexer
         int open(){
-            ads.begin();
-            ads.setGain(GAIN_TWOTHIRDS);
+            ads_.begin();
+            ads_.setGain(GAIN_TWOTHIRDS);
             return 1;
         };
         
 };
+//Definition of static multiplexer:
+Multiplexer TempSensorAdafruit::multiplexer;
+//Definition of static ads;
+Adafruit_ADS1115 TempSensorAdafruit::ads_;
 class FlowSensor : public Sensor{
     int pin;
     public:
@@ -261,11 +258,11 @@ class SerialSensorInterface{
         char sol, eol, pollchar;
         bool recipient_ready = false;
         int baudrate;
-        SerialSensorInterface(char _sol, char _eol, char _pollchar ,String _ready_msg = "Arduino is ready", int _baudrate = 9600){
+        SerialSensorInterface(char _sol, char _eol, char _pollchar ,String _ready_msg, int _baudrate = 9600){
             begin(_sol, _eol, _pollchar,_ready_msg, _baudrate);
         }
         SerialSensorInterface() = default;
-        void begin(char _sol, char _eol, char _pollchar, String _ready_msg = "Arduino is ready", int _baudrate = 9600){
+        void begin(char _sol, char _eol, char _pollchar, String _ready_msg, int _baudrate = 9600){
             sol = _sol;
             eol = _eol;
             pollchar = _pollchar;
@@ -311,9 +308,10 @@ std::array<FlowSensor, 8> flow_sensors;
 SerialSensorInterface ser;
 
 void setup(){
-    ser.begin('\r', '\n', '\n');
+    ser.begin('\r','\n', '\n', F("Arduino is ready"));
     int i =0;
     for(auto&& tempsensor:temp_sensors){
+        tempsensor.set_debug(true);
         tempsensor.set_pin(i);
         tempsensor.set_multiplexer_pins(47, 49, 51, 53);
         ++i;
