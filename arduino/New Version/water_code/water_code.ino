@@ -307,11 +307,13 @@ class SerialSensorInterface{
 };
 
 
-
+//Number of sensors (temp and flow)
+const int nt = 16;
+const int nf = 8;
 //Temperature Sensor array:
-std::array<TempSensorAdafruit, 1> temp_sensors;
+std::array<TempSensorAdafruit, nt> temp_sensors;
 //FlowSensor array:
-std::array<FlowSensor, 1> flow_sensors;
+std::array<FlowSensor, nf> flow_sensors;
 SerialSensorInterface ser;
 
 void setup(){
@@ -332,7 +334,7 @@ void setup(){
 };
 void loop(){
     ser.polled();
-    ser.ReadValues<TempSensorAdafruit, 1>(temp_sensors);//.data()//, temp_sensors.size()); //temp_sensors.size()
-    ser.ReadValues<FlowSensor, 1>(flow_sensors);//.data(), flow_sensors.size());
+    ser.ReadValues<TempSensorAdafruit, nt>(temp_sensors);//.data()//, temp_sensors.size()); //temp_sensors.size()
+    ser.ReadValues<FlowSensor, nf>(flow_sensors);//.data(), flow_sensors.size());
     ser.recipient_ready = false;
 };
