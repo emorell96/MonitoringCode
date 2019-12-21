@@ -318,7 +318,7 @@ SerialSensorInterface ser;
 
 void setup(){
     //Serial.println("s");
-    ser.begin('\r','\n', 'a', '*',F("Arduino is ready"));
+    ser.begin('\x02','\x03', 'a', '*',F("Arduino is ready"));
     int i =0;
     for(auto&& tempsensor:temp_sensors){
         tempsensor.set_debug(true);

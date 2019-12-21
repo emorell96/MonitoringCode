@@ -138,10 +138,10 @@ class WaterInterlock(SerialData):
                 counter += 1
         return fdata
 
-#test code:
-# tsensor = TempSensorOld(q.TempUnit(q.TempUnit.Celsius), q.Temperature)
-# fsensor = FlowSensor(q.VoltUnit(q.VoltUnit.V), q.Voltage)
+# test code:
+tsensor = TempSensorOld(q.TempUnit(q.TempUnit.Celsius), q.Temperature)
+fsensor = FlowSensor(q.VoltUnit(q.VoltUnit.V), q.Voltage)
 
-# w = WaterInterlock("COM4", 9600)
-# w.setDataStructure(structure = ((16, tsensor), (8, fsensor)))
-# print(w.check())
+w = WaterInterlock("COM4", 9600, poll_char="a", sol='\x02', eol='\x03')
+w.setDataStructure(structure = ((16, tsensor), (8, fsensor)))
+print(w.check())
