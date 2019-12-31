@@ -1,7 +1,7 @@
 import serial
 import io
 import datetime
-import quantities as q
+import Backend.quantities as q
 import time
 # class TempSensor:
 #     #class to assure compatibility with old 16 bit rtd measurement scheme and the new ina 15C to 45C in 5V.
@@ -21,7 +21,7 @@ import time
 #         #
 
 class SerialData:
-    def __init__(self, port, baud_rate = 9600, databits = 8, parity = serial.PARITY_NONE, eol = "\n", sol ="\r", poll_char = "\r",timeout = 1): #parity = "N" equal to None
+    def __init__(self, port, baud_rate = 9600, databits = 8, parity = serial.PARITY_NONE, eol = "\x03", sol ="\x02", poll_char = "\r",timeout = 1): #parity = "N" equal to None
         self.port = port
         self.baud_rate = baud_rate
         self.parity = parity
@@ -139,9 +139,9 @@ class WaterInterlock(SerialData):
         return fdata
 
 # test code:
-tsensor = TempSensorOld(q.TempUnit(q.TempUnit.Celsius), q.Temperature)
-fsensor = FlowSensor(q.VoltUnit(q.VoltUnit.V), q.Voltage)
+# tsensor = TempSensorOld(q.TempUnit(q.TempUnit.Celsius), q.Temperature)
+# fsensor = FlowSensor(q.VoltUnit(q.VoltUnit.V), q.Voltage)
 
-w = WaterInterlock("COM4", 9600, poll_char="a", sol='\x02', eol='\x03')
-w.setDataStructure(structure = ((16, tsensor), (8, fsensor)))
-print(w.check())
+# w = WaterInterlock("COM4", 9600, poll_char="a", sol='\x02', eol='\x03')
+# w.setDataStructure(structure = ((16, tsensor), (8, fsensor)))
+# print(w.check())
